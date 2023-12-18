@@ -1,12 +1,13 @@
-# starting from
-# https://api.wikimedia.org/wiki/Core_REST_API/Reference/Search/Search_titles
+# starting from:
+## https://api.wikimedia.org/wiki/Core_REST_API/Reference/Search/Search_titles
+## https://api.wikimedia.org/wiki/Core_REST_API/Reference/Pages/Get_page_source
 # Author: Phouter0499
 # Python 3
 # Search English Wikipedia for 5 pages with titles that start with "earth"
 
 import requests
 
-def make_wiki_api_request(url, parameters):
+def make_wiki_api_request(url, parameters=None):
     """
     Make an API request to the given URL with the specified parameters.
     Handles exceptions and sets a timeout for the request.
@@ -35,15 +36,15 @@ def make_wiki_api_request(url, parameters):
 
 def search_title(search_query, number_of_results):
   """
-  Retrieves a specified number of search results from the Wikipedia API based on a given search query.
+  Searches for titles on Wikipedia based on a search query and returns a list of search results.
 
   Parameters:
-    - search_query (str): The search query to be used for retrieving the search results.
-    - number_of_results (int): The number of search results to be retrieved.
+  - search_query (str): The search query to be used for searching titles on Wikipedia.
+  - number_of_results (int): The maximum number of search results to be returned.
 
   Returns:
-    - pages: A list of dictionaries representing the search result pages from the Wikipedia API.
-    to understand output better: https://api.wikimedia.org/wiki/Core_REST_API/Reference/Search/Search_result_object
+  - search_results (list): A list of search results. Each search result is a dictionary containing information about a title.
+
   """
   url = 'https://api.wikimedia.org/core/v1/wikipedia/en/search/title'
   parameters = {'q': search_query, 'limit': number_of_results}
@@ -51,13 +52,26 @@ def search_title(search_query, number_of_results):
   response = make_wiki_api_request(url, parameters)
   if response is None:
     return []
-  pages = response['pages']
+  search_results = response['pages']
 
-  return pages
+  return search_results
+
+def get_page_source(page_name):
+  """
+  Get the source code of a Wikipedia page.
+
+  Args:
+      page_name (str): The name of the Wikipedia page.
+
+  Returns:
+      str: The source code of the Wikipedia page, or None if the page does not exist.
+  """
+  url = 'https://api.wikimedia.org/core/v1/wikipedia/en/page/' + page_name
+
+  Page_object = make_wiki_api_request(url)
+  if Page_object is None:
+    return None
+  return Page_object
 
 if __name__ == '__main__':
-  pages = search_title('earth', 5)
-  for page in pages:
-    print(page['title'])
-    print(page['description'])
-    print()
+  search_results = search_title('earth', 5)
