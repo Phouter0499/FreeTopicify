@@ -1,2 +1,2 @@
-Scripts/page_source.html
-Scripts/parsed_wikitext.html
+Scripts/html_page.html
+Scripts/__pycache__/

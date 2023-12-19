@@ -13,7 +13,7 @@ def make_wiki_api_request(url, parameters=None):
     try:
         response = requests.get(url, params=parameters, timeout=60)
         response.raise_for_status()  # Raise an HTTPError if the HTTP request returned an unsuccessful status code
-        return response.json()
+        return response
     except requests.exceptions.HTTPError as http_err:
         print(response)
         print(f"HTTP error occurred: {http_err}")
@@ -33,19 +33,21 @@ def search_title(search_query, number_of_results):
   parameters = {'q': search_query, 'limit': number_of_results}
 
   response = make_wiki_api_request(url, parameters)
-  if response is None:
+  if not response:
     return []
-  search_results = response['pages']
+  search_results = response.json()['pages']
 
   return search_results
 
-def get_page_source(page_name):
-  url = 'https://api.wikimedia.org/core/v1/wikipedia/en/page/' + page_name
+def get_html(title, project='wikipedia', language='en'):
+  url = f'https://api.wikimedia.org/core/v1/{project}/{language}/page/{title}/html'
 
-  Page_object = make_wiki_api_request(url)
-  if Page_object is None:
+  response = make_wiki_api_request(url)
+  if not response:
+    print(response)
     return None
-  return Page_object['source']
+  HTML = response.text
+  return HTML
 
 def get_link_texts(page_source):
   parsed_wikitext = mwparserfromhell.parse(page_source)
