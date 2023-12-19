@@ -1,7 +1,8 @@
 # test_BasicWikimediaAPI.py
 import unittest
-from BasicWikimediaAPI import make_wiki_api_request, search_title, get_html, get_link_texts
-import mwparserfromhell
+from BasicWikimediaAPI import *
+import re
+from textblob import TextBlob
 
 class TestBasicWikimediaAPI(unittest.TestCase):
 
@@ -13,10 +14,24 @@ class TestBasicWikimediaAPI(unittest.TestCase):
 
     def test_search_title(self):
         search_results = search_title('earth', 5)
+        pairs = []
         for search_result in search_results:
-            print(search_result['title'])
-            print(search_result['description'])
-            print()
+            pairs.append((search_result['title'], search_result['description']))
+        print(pairs)
+
+    def test_search_content(self):
+        with open("The Prospect of AI in the Workforce; A 50-Year Outlook.txt", "r", encoding="utf-8") as f:
+            essay = f.read()
+        # get list of nouns using textblob
+        blob = TextBlob(essay)
+        NPs = list(set([p[0].lower() for p in blob.tags if re.match("N", p[1])]))
+        query = " OR ".join(NPs[:20]) # 300 length is max
+        print(query)
+        search_results = search_content(query, 15)
+        pairs = []
+        for search_result in search_results:
+            pairs.append((search_result['title'], search_result['description']))
+        print(pairs)
 
     def test_get_html(self):
         search_results = search_title('earth', 1)

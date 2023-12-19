@@ -40,6 +40,17 @@ def search_title(search_query, number_of_results):
 
   return search_results
 
+def search_content(search_query, number_of_results):
+  url = 'https://api.wikimedia.org/core/v1/wikipedia/en/search/page'
+  parameters = {'q': search_query, 'limit': number_of_results}
+
+  response = make_wiki_api_request(url, parameters)
+  if not response:
+    return []
+  search_results = response.json()['pages']
+
+  return search_results
+
 def get_html(title, project='wikipedia', language='en'):
   url = f'https://api.wikimedia.org/core/v1/{project}/{language}/page/{title}/html'
 
