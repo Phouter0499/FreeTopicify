@@ -25,20 +25,12 @@ class TestBasicWikimediaAPI(unittest.TestCase):
         # write page_source to file
         with open('html_page.html', 'w', encoding="utf-8") as f:
             f.write(html_page)
-
-    def test_mwparserfromhell(self):
-        search_results = search_title('earth', 1)
-        page_source = get_page_source(search_results[0]['key'])
-        parsed_wikitext = mwparserfromhell.parse(page_source)
-        sections = parsed_wikitext.get_sections()
-        wikilinks = parsed_wikitext.filter_wikilinks()
-        breakpoint()
     
     def test_get_link_texts(self):
         search_results = search_title('earth', 1)
-        page_source = get_page_source(search_results[0]['key'])
-        link_texts = get_link_texts(page_source)
-        print(link_texts)
+        html = get_html(search_results[0]['key'])
+        link_texts = get_link_texts(html)
+        print(set(link_texts))
 
 if __name__ == '__main__':
     unittest.main()
