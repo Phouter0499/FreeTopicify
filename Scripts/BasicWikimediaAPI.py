@@ -6,16 +6,10 @@
 # Search English Wikipedia for 5 pages with titles that start with "earth"
 
 import requests
+import mwparserfromhell
+import re
 
 def make_wiki_api_request(url, parameters=None):
-    """
-    Make an API request to the given URL with the specified parameters.
-    Handles exceptions and sets a timeout for the request.
-
-    :param url: The API endpoint URL
-    :param parameters: The parameters to be sent with the request
-    :return: A JSON response if the request is successful, None otherwise
-    """
     try:
         response = requests.get(url, params=parameters, timeout=60)
         response.raise_for_status()  # Raise an HTTPError if the HTTP request returned an unsuccessful status code
@@ -35,17 +29,6 @@ def make_wiki_api_request(url, parameters=None):
     return None
 
 def search_title(search_query, number_of_results):
-  """
-  Searches for titles on Wikipedia based on a search query and returns a list of search results.
-
-  Parameters:
-  - search_query (str): The search query to be used for searching titles on Wikipedia.
-  - number_of_results (int): The maximum number of search results to be returned.
-
-  Returns:
-  - search_results (list): A list of search results. Each search result is a dictionary containing information about a title.
-
-  """
   url = 'https://api.wikimedia.org/core/v1/wikipedia/en/search/title'
   parameters = {'q': search_query, 'limit': number_of_results}
 
@@ -57,21 +40,35 @@ def search_title(search_query, number_of_results):
   return search_results
 
 def get_page_source(page_name):
-  """
-  Get the source code of a Wikipedia page.
-
-  Args:
-      page_name (str): The name of the Wikipedia page.
-
-  Returns:
-      str: The source code of the Wikipedia page, or None if the page does not exist.
-  """
   url = 'https://api.wikimedia.org/core/v1/wikipedia/en/page/' + page_name
 
   Page_object = make_wiki_api_request(url)
   if Page_object is None:
     return None
-  return Page_object
+  return Page_object['source']
+
+def get_link_texts(page_source):
+  parsed_wikitext = mwparserfromhell.parse(page_source)
+  for template in parsed_wikitext.filter_templates():
+    try:
+      parsed_wikitext.remove(template)
+    except ValueError:
+      pass
+  sections = parsed_wikitext.get_sections()
+  wikilinks = []
+  for section in sections:
+    wikilinks += section.filter_wikilinks()
+  wikilink_texts = [link.title for link in wikilinks]
+  # convert into str
+  wikilink_texts = [str(l) for l in wikilink_texts if len(l) > 0]
+  # deal with 'globus cruciger (fixed width).svg'
+  # deal with 'Category:Astronomical objects known since antiquity'
+  wikilink_texts = [l for l in wikilink_texts if not re.match(r':[a-zA-Z]+:|[a-zA-Z]+:', l)]
+  # deal with inner links '#Axial tilt and seasons'
+  wikilink_texts = [l[1:] if l[0] == '#' else l for l in wikilink_texts]
+  # deal with 'Water vapor#In Earth's atmosphere' or 'Cloud#Formation' or 'Capitalization in English#History of English capitalization'
+  wikilink_texts = [re.split(r'#', l, 1)[0] if re.search(r'#', l) else l for l in wikilink_texts]
+  return list(set(wikilink_texts))
 
 if __name__ == '__main__':
   search_results = search_title('earth', 5)
