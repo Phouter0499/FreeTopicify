@@ -24,45 +24,48 @@ def get_topics_nouns(doc):
     nouns_glf = sorted(nouns, key=lambda x: nouns.count(x)/zipf_frequency(x, 'en'), reverse=True)
     return nouns_glf
 
-with open("input.txt", "r", encoding="utf-8") as f:
-    essay = f.read()
-nlp = spacy.load("en_core_web_lg")
-doc = nlp(essay)
-
-entities = get_topics_ner(doc)
-nouns = get_topics_nouns(doc)
-
-# MAKE QUERY OPERANDS
-operands = []
-for ent in entities:
-    operands.append(ent[0])
-for noun in nouns:
-    if noun.lower() in {o.lower() for o in operands}:
-        continue
-    operands.append(noun)
-# MAKE QUERY
-query = ""
-for operand in operands:
-    if " " in operand:
-        temp_query = f'{query} OR "{operand}"' if query else operand
-    else:
-        temp_query = f"{query} OR {operand}" if query else operand
-    if len(temp_query) <= 300:
-        query = temp_query
-    else:
-        break
-search_results = search_content(query, 15)
-main_nodes = []
-for search_result in search_results:
-    main_nodes.append((search_result['title'], search_result['description'], search_result['key']))
-with open(r"output.txt", "w", encoding="utf-8") as f:
-    print(query)
-    for main_node in main_nodes:        
-        if main_node[1]:
-            f.write(f"[[{main_node[0]}]]: {main_node[1]}\n")
+def get_OMDF_topics(input, limit=15, depth_mode=True):
+    nlp = spacy.load("en_core_web_lg")
+    doc = nlp(input)
+    # MAKE QUERY OPERANDS
+    entities = get_topics_ner(doc)
+    nouns = get_topics_nouns(doc)
+    operands = []
+    for ent in entities:
+        operands.append(ent[0])
+    for noun in nouns:
+        if noun.lower() in {o.lower() for o in operands}:
+            continue
+        operands.append(noun)
+    # MAKE QUERY
+    query = ""
+    for operand in operands:
+        if " " in operand:
+            temp_query = f'{query} OR "{operand}"' if query else operand
         else:
-            f.write(f"[[{main_node[0]}]]\n")
-        html = get_html(main_node[2])
-        link_texts = get_link_texts(html)
-        body = ", ".join([f"[[{link_text}]]" for link_text in link_texts])
-        f.write(f"{body}\n\n")
+            temp_query = f"{query} OR {operand}" if query else operand
+        if len(temp_query) <= 300:
+            query = temp_query
+        else:
+            break
+    # SEND QUERY AND PROCESS QUERY RESULTS
+    search_results = search_content(query, limit)
+    if depth_mode:
+        tree = []
+        for search_result in search_results:
+            head = f"[[{search_result['title']}]]"
+            key = search_result['key']
+            html = get_html(key)
+            link_texts = get_link_texts(html)
+            branches = [f"[[{link_text}]]" for link_text in link_texts]
+            tree.append((head, branches))
+        return tree
+    else:
+        return [f"[[{r['title']}]]" for r in search_results]
+
+if __name__ == '__main__':
+    with open("output.txt", "w", encoding="utf-8") as f:
+        for head, branches in get_OMDF_topics("earth", 5):
+            f.write(f"{head}\n")
+            f.write(", ".join(branches))
+            f.write("\n\n")
