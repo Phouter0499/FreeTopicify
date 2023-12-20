@@ -2,7 +2,8 @@
 import unittest
 from BasicWikimediaAPI import *
 import re
-from textblob import TextBlob
+import spacy
+from wordfreq import zipf_frequency
 
 class TestBasicWikimediaAPI(unittest.TestCase):
 
@@ -22,10 +23,18 @@ class TestBasicWikimediaAPI(unittest.TestCase):
     def test_search_content(self):
         with open("The Prospect of AI in the Workforce; A 50-Year Outlook.txt", "r", encoding="utf-8") as f:
             essay = f.read()
-        # get list of nouns using textblob
-        blob = TextBlob(essay)
-        Ns = list(set([p[0].lower() for p in blob.tags if re.match("N", p[1])]))
-        query = " OR ".join(Ns[:20]) # 300 length is max
+        # get list of nouns using spacy
+        nlp = spacy.load("en_core_web_lg")
+        doc = nlp(essay)
+        nouns = list({token.lemma_ for token in doc if token.pos_ == "NOUN" and re.search(r"\w", token.lemma_)})
+        sorted_N = sorted(nouns, key=lambda x: zipf_frequency(x, 'en'), reverse=False)
+        query = ""
+        for noun in sorted_N:
+            temp_query = f"{query} OR {noun}" if query else noun
+            if len(temp_query) <= 300:
+                query = temp_query
+            else:
+                break
         print(query)
         search_results = search_content(query, 15)
         pairs = []
