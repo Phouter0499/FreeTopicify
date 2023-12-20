@@ -24,8 +24,8 @@ class TestBasicWikimediaAPI(unittest.TestCase):
             essay = f.read()
         # get list of nouns using textblob
         blob = TextBlob(essay)
-        NPs = list(set([p[0].lower() for p in blob.tags if re.match("N", p[1])]))
-        query = " OR ".join(NPs[:20]) # 300 length is max
+        Ns = list(set([p[0].lower() for p in blob.tags if re.match("N", p[1])]))
+        query = " OR ".join(Ns[:20]) # 300 length is max
         print(query)
         search_results = search_content(query, 15)
         pairs = []
