@@ -64,11 +64,13 @@ def get_html(title, project='wikipedia', language='en'):
 def get_link_texts(html):
   soup = BeautifulSoup(html, 'lxml')
   # get the section with references from the wikipage and delete its parents recursively
-  heading = soup.find(id='References')
-  heading.parent.decompose()
+  heading = soup.find('h2', id='References')
+  if heading:
+    heading.parent.decompose()
   # get the section with notes from the wikipage and delete its parents recursively
-  heading = soup.find(id='Notes')
-  heading.parent.decompose()
+  heading = soup.find('h2', id='Notes')
+  if heading:
+    heading.parent.decompose()
   # get all wikilinks from a wikipage
   wikilinks = soup.find_all('a', rel=re.compile('mw:WikiLink'), href=re.compile(r'\.\/.+?'), title=True)
   # get text from the wikilink while filtering for 
