@@ -18,11 +18,13 @@ def get_topics_ner(doc):
 
 def get_topics_nouns(doc):
     # USE NOUNS TO GET THE MOST IMPORTANT IDEAS
-    nouns = list({token.lemma_ for token in doc if token.pos_ == "NOUN" and re.search(r"\w", token.lemma_)})
-    nouns = sorted(nouns, key=lambda x: zipf_frequency(x, 'en'), reverse=False)
-    return nouns
+    nouns = [token.lemma_ for token in doc if token.pos_ == "NOUN" and re.search(r"\w", token.lemma_)]
+    # local frequency vs global frequency
+    # basically I want specialized vocabulary thats used a lot and exclude general nouns
+    nouns_glf = sorted(nouns, key=lambda x: nouns.count(x)/zipf_frequency(x, 'en'), reverse=True)
+    return nouns_glf
 
-with open("essay.txt", "r", encoding="utf-8") as f:
+with open("input.txt", "r", encoding="utf-8") as f:
     essay = f.read()
 nlp = spacy.load("en_core_web_lg")
 doc = nlp(essay)
