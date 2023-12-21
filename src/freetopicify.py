@@ -64,8 +64,10 @@ def get_OMDF_topics(input, limit=15, depth_mode=True):
         return [f"[[{r['title']}]]" for r in search_results]
 
 if __name__ == '__main__':
+    with open("input.txt", "r", encoding="utf-8") as f:
+        text = f.read()
     with open("output.txt", "w", encoding="utf-8") as f:
-        for head, branches in get_OMDF_topics("earth", 5):
+        for head, branches in get_OMDF_topics(text, 5):
             f.write(f"{head}\n")
             f.write(", ".join(branches))
             f.write("\n\n")
