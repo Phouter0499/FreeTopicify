@@ -1,6 +1,6 @@
 import re
 import spacy
-from BasicWikimediaAPI import *
+from .basic_wikimedia_api_wrapper import *
 from wordfreq import zipf_frequency
 from collections import Counter
 
@@ -21,7 +21,8 @@ def get_topics_nouns(doc):
     nouns = [token.lemma_ for token in doc if token.pos_ == "NOUN" and re.search(r"\w", token.lemma_)]
     # local frequency vs global frequency
     # basically I want specialized vocabulary thats used a lot and exclude general nouns
-    nouns_glf = sorted(nouns, key=lambda x: nouns.count(x)/zipf_frequency(x, 'en'), reverse=True)
+    calculate_weight = lambda x: nouns.count(x)/max(zipf_frequency(x, 'en'), 0.001)
+    nouns_glf = sorted(nouns, key=calculate_weight, reverse=True)
     return nouns_glf
 
 def get_OMDF_topics(input, limit=15, depth_mode=True):
