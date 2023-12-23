@@ -58,11 +58,11 @@ def get_OMDF_topics(input, limit=15, depth_mode=True):
             key = search_result['key']
             html = get_html(key)
             link_texts = get_link_texts(html)
-            branches = [f"[[{link_text}]]" for link_text in link_texts]
+            branches = list({f"[[{link_text}]]" for link_text in link_texts})
             tree.append((head, branches))
         return tree
     else:
-        return [f"[[{r['title']}]]" for r in search_results]
+        return list({f"[[{r['title']}]]" for r in search_results})
 
 if __name__ == '__main__':
     with open("input.txt", "r", encoding="utf-8") as f:
